@@ -56,7 +56,7 @@ export const useScaffoldReadContract = <
       enabled: !Array.isArray(args) || !args.some(arg => arg === undefined),
       ...queryOptions,
     },
-  });
+  }) as any;
 
   const queryClient = useQueryClient();
 

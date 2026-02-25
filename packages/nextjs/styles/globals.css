@@ -5,6 +5,15 @@
 @theme {
   --shadow-center: 0 0 12px -2px rgb(0 0 0 / 0.05);
   --animate-pulse-fast: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Prediction Market Colors */
+  --color-yes: #22c55e;
+  --color-yes-hover: #16a34a;
+  --color-no: #ef4444;
+  --color-no-hover: #dc2626;
+  --color-market-open: #3b82f6;
+  --color-market-closed: #f59e0b;
+  --color-market-resolved: #8b5cf6;
 }
 
 @plugin "daisyui" {
@@ -16,75 +25,67 @@
 @plugin "daisyui/theme" {
   name: "light";
 
-  --color-primary: #93bbfb;
-  --color-primary-content: #212638;
-  --color-secondary: #dae8ff;
-  --color-secondary-content: #212638;
-  --color-accent: #93bbfb;
-  --color-accent-content: #212638;
-  --color-neutral: #212638;
+  --color-primary: #8885f2;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6366f1;
+  --color-secondary-content: #ffffff;
+  --color-accent: #8885f2;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1f2937;
   --color-neutral-content: #ffffff;
   --color-base-100: #ffffff;
-  --color-base-200: #f4f8ff;
-  --color-base-300: #dae8ff;
-  --color-base-content: #212638;
-  --color-info: #93bbfb;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
+  --color-base-200: #f8f9fc;
+  --color-base-300: #e5e7eb;
+  --color-base-content: #1f2937;
+  --color-info: #3b82f6;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 
-  --radius-field: 9999rem;
-  --radius-box: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
   --tt-tailw: 6px;
 
-  /* COFHE */
+  /* Fhenix */
   --color-cofhe-primary: #8885f2;
   --color-cofhe-primary-content: #ffffff;
-  --color-cofhe-secondary: #7c3aed;
-  --color-cofhe-secondary-content: #4c1d95;
+  --color-cofhe-secondary: #6366f1;
+  --color-cofhe-secondary-content: #ffffff;
 }
 
 @plugin "daisyui/theme" {
   name: "dark";
 
-  --color-primary: #212638;
-  --color-primary-content: #f9fbff;
-  --color-secondary: #323f61;
-  --color-secondary-content: #f9fbff;
-  --color-accent: #4969a6;
-  --color-accent-content: #f9fbff;
-  --color-neutral: #f9fbff;
-  --color-neutral-content: #385183;
-  --color-base-100: #385183;
-  --color-base-200: #2a3655;
-  --color-base-300: #212638;
-  --color-base-content: #f9fbff;
-  --color-info: #385183;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
+  --color-primary: #8885f2;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6366f1;
+  --color-secondary-content: #ffffff;
+  --color-accent: #a78bfa;
+  --color-accent-content: #ffffff;
+  --color-neutral: #f9fafb;
+  --color-neutral-content: #111827;
+  --color-base-100: #111827;
+  --color-base-200: #1f2937;
+  --color-base-300: #374151;
+  --color-base-content: #f9fafb;
+  --color-info: #3b82f6;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 
-  --radius-field: 9999rem;
-  --radius-box: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
 
   --tt-tailw: 6px;
-  --tt-bg: var(--color-primary);
+  --tt-bg: var(--color-base-300);
 
-  /* COFHE */
-  --color-cofhe-primary: #a583f4;
+  /* Fhenix */
+  --color-cofhe-primary: #a78bfa;
   --color-cofhe-primary-content: #ffffff;
-  --color-cofhe-secondary: #7c3aed;
-  --color-cofhe-secondary-content: #4c1d95;
+  --color-cofhe-secondary: #8b5cf6;
+  --color-cofhe-secondary-content: #ffffff;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
   *,
   ::after,
@@ -95,7 +96,7 @@
   }
 
   p {
-    margin: 1rem 0;
+    margin: 0.5rem 0;
   }
 
   body {
@@ -107,17 +108,17 @@
   h3,
   h4 {
     margin-bottom: 0.5rem;
-    line-height: 1;
+    line-height: 1.2;
   }
 }
 
 :root,
 [data-theme] {
-  background: var(--color-base-200);
+  background: var(--color-base-100);
 }
 
 .btn {
-  @apply shadow-md;
+  @apply shadow-sm font-medium;
 }
 
 .btn.btn-ghost {
@@ -132,16 +133,14 @@
   opacity: 80%;
 }
 
-/* COFHE */
+/* Fhenix Primary Button - Flat Style */
 .btn-cofhe {
   --btn-color: var(--color-cofhe-primary);
   --btn-fg: var(--color-cofhe-primary-content);
-  box-shadow: 0 0 15px 2px rgba(139, 92, 246, 0.4);
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--color-cofhe-primary) 0%, var(--color-cofhe-secondary) 100%);
-  background-size: 200% 200%;
-  background-position: 0% 0%;
+  background: var(--color-cofhe-primary);
+  color: var(--color-cofhe-primary-content);
   border: none;
+  transition: all 0.2s ease;
 
   &.btn-disabled {
     opacity: 0.5;
@@ -149,6 +148,50 @@
 }
 
 .btn-cofhe:hover {
-  box-shadow: 0 0 20px 4px rgba(139, 92, 246, 0.6);
-  background-position: 100% 100%;
+  background: var(--color-cofhe-secondary);
+}
+
+/* Prediction Market Components */
+.market-card {
+  @apply bg-base-100 border border-base-300 rounded-xl p-5 transition-all duration-200;
+}
+
+.market-card:hover {
+  @apply border-primary shadow-sm;
+}
+
+.btn-yes {
+  background: var(--color-yes);
+  color: white;
+  border: none;
+}
+
+.btn-yes:hover {
+  background: var(--color-yes-hover);
+}
+
+.btn-no {
+  background: var(--color-no);
+  color: white;
+  border: none;
+}
+
+.btn-no:hover {
+  background: var(--color-no-hover);
+}
+
+.badge-open {
+  @apply bg-blue-500/10 text-blue-600 border-blue-500/20;
+}
+
+.badge-closed {
+  @apply bg-amber-500/10 text-amber-600 border-amber-500/20;
+}
+
+.badge-resolved {
+  @apply bg-purple-500/10 text-purple-600 border-purple-500/20;
+}
+
+.encrypted-indicator {
+  @apply inline-flex items-center gap-1 text-xs text-base-content/60 bg-base-200 px-2 py-1 rounded;
 }

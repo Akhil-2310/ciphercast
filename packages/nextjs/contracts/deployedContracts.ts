@@ -5,9 +5,124 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  31337: {
+  11155111: {
+    AUSDFaucet: {
+      address: "0x20c79Cf9CE64b0fd81AFc99A82F0b643a4bDb6b3",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_ausd",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "COOLDOWN",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "FAUCET_AMOUNT",
+          outputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "ausd",
+          outputs: [
+            {
+              internalType: "contract IShieldedStablecoin",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "claim",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "disableFaucet",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "faucetEnabled",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "lastClaim",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
     FHECounter: {
-      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      address: "0xc1F04F233F47f3D131817536037A801632F8C962",
       abi: [
         {
           inputs: [],
@@ -106,91 +221,261 @@ const deployedContracts = {
       ],
       inheritedFunctions: {},
     },
-    Multicall3: {
-      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    FHEPredictionMarket: {
+      address: "0xF7F52E384eBf3ea9B728Ce1645fb3f37e49F8286",
       abi: [
         {
           inputs: [
             {
-              components: [
-                {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
-                },
-                {
-                  internalType: "bytes",
-                  name: "callData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Call[]",
-              name: "calls",
-              type: "tuple[]",
+              internalType: "address",
+              name: "_fusd",
+              type: "address",
             },
           ],
-          name: "aggregate",
-          outputs: [
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
             {
+              internalType: "uint8",
+              name: "got",
+              type: "uint8",
+            },
+            {
+              internalType: "uint8",
+              name: "expected",
+              type: "uint8",
+            },
+          ],
+          name: "InvalidEncryptedInput",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ReentrancyGuardReentrantCall",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "int32",
+              name: "value",
+              type: "int32",
+            },
+          ],
+          name: "SecurityZoneOutOfBounds",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
               internalType: "uint256",
-              name: "blockNumber",
+              name: "marketId",
               type: "uint256",
             },
             {
-              internalType: "bytes[]",
-              name: "returnData",
-              type: "bytes[]",
+              indexed: false,
+              internalType: "uint256",
+              name: "betIndex",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bettor",
+              type: "address",
             },
           ],
-          stateMutability: "payable",
-          type: "function",
+          name: "BetDecryptRequested",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bettor",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "betIndex",
+              type: "uint256",
+            },
+          ],
+          name: "BetPlaced",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint64",
+              name: "amount",
+              type: "uint64",
+            },
+          ],
+          name: "FUSDDeposited",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint64",
+              name: "amount",
+              type: "uint64",
+            },
+          ],
+          name: "FUSDWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "question",
+              type: "string",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "creator",
+              type: "address",
+            },
+          ],
+          name: "MarketCreated",
+          type: "event",
         },
         {
           inputs: [
             {
-              components: [
-                {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
-                },
-                {
-                  internalType: "bool",
-                  name: "allowFailure",
-                  type: "bool",
-                },
-                {
-                  internalType: "bytes",
-                  name: "callData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Call3[]",
-              name: "calls",
-              type: "tuple[]",
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
           ],
-          name: "aggregate3",
+          name: "bets",
           outputs: [
             {
-              components: [
-                {
-                  internalType: "bool",
-                  name: "success",
-                  type: "bool",
-                },
-                {
-                  internalType: "bytes",
-                  name: "returnData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Result[]",
-              name: "returnData",
-              type: "tuple[]",
+              internalType: "address",
+              name: "bettor",
+              type: "address",
+            },
+            {
+              internalType: "euint64",
+              name: "encryptedStake",
+              type: "uint256",
+            },
+            {
+              internalType: "ebool",
+              name: "encryptedOutcome",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "ethEscrow",
+              type: "uint256",
+            },
+            {
+              internalType: "euint64",
+              name: "fusdEscrow",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "decryptRequested",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "withdrawn",
+              type: "bool",
             },
           ],
-          stateMutability: "payable",
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "question",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "closeTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint16",
+              name: "feeBps",
+              type: "uint16",
+            },
+            {
+              internalType: "enum FHEPredictionMarket.Currency",
+              name: "currency",
+              type: "uint8",
+            },
+            {
+              internalType: "address",
+              name: "priceFeed",
+              type: "address",
+            },
+            {
+              internalType: "int256",
+              name: "priceThreshold",
+              type: "int256",
+            },
+          ],
+          name: "createPriceMarket",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -198,146 +483,49 @@ const deployedContracts = {
             {
               components: [
                 {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
-                },
-                {
-                  internalType: "bool",
-                  name: "allowFailure",
-                  type: "bool",
-                },
-                {
                   internalType: "uint256",
-                  name: "value",
+                  name: "ctHash",
                   type: "uint256",
                 },
                 {
-                  internalType: "bytes",
-                  name: "callData",
-                  type: "bytes",
+                  internalType: "uint8",
+                  name: "securityZone",
+                  type: "uint8",
                 },
-              ],
-              internalType: "struct Multicall3.Call3Value[]",
-              name: "calls",
-              type: "tuple[]",
-            },
-          ],
-          name: "aggregate3Value",
-          outputs: [
-            {
-              components: [
                 {
-                  internalType: "bool",
-                  name: "success",
-                  type: "bool",
+                  internalType: "uint8",
+                  name: "utype",
+                  type: "uint8",
                 },
                 {
                   internalType: "bytes",
-                  name: "returnData",
+                  name: "signature",
                   type: "bytes",
                 },
               ],
-              internalType: "struct Multicall3.Result[]",
-              name: "returnData",
-              type: "tuple[]",
+              internalType: "struct InEuint64",
+              name: "encAmount",
+              type: "tuple",
             },
           ],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              components: [
-                {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
-                },
-                {
-                  internalType: "bytes",
-                  name: "callData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Call[]",
-              name: "calls",
-              type: "tuple[]",
-            },
-          ],
-          name: "blockAndAggregate",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "blockNumber",
-              type: "uint256",
-            },
-            {
-              internalType: "bytes32",
-              name: "blockHash",
-              type: "bytes32",
-            },
-            {
-              components: [
-                {
-                  internalType: "bool",
-                  name: "success",
-                  type: "bool",
-                },
-                {
-                  internalType: "bytes",
-                  name: "returnData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Result[]",
-              name: "returnData",
-              type: "tuple[]",
-            },
-          ],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getBasefee",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "basefee",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
+          name: "depositFUSD",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
           inputs: [
             {
               internalType: "uint256",
-              name: "blockNumber",
+              name: "",
               type: "uint256",
             },
           ],
-          name: "getBlockHash",
-          outputs: [
-            {
-              internalType: "bytes32",
-              name: "blockHash",
-              type: "bytes32",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getBlockNumber",
+          name: "ethMarketEscrow",
           outputs: [
             {
               internalType: "uint256",
-              name: "blockNumber",
+              name: "",
               type: "uint256",
             },
           ],
@@ -346,24 +534,11 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "getChainId",
+          name: "fusd",
           outputs: [
             {
-              internalType: "uint256",
-              name: "chainid",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getCurrentBlockCoinbase",
-          outputs: [
-            {
-              internalType: "address",
-              name: "coinbase",
+              internalType: "contract IShieldedStablecoin",
+              name: "",
               type: "address",
             },
           ],
@@ -371,12 +546,18 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "getCurrentBlockDifficulty",
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "getBetCount",
           outputs: [
             {
               internalType: "uint256",
-              name: "difficulty",
+              name: "",
               type: "uint256",
             },
           ],
@@ -385,11 +566,11 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "getCurrentBlockGasLimit",
+          name: "marketCounter",
           outputs: [
             {
               internalType: "uint256",
-              name: "gaslimit",
+              name: "",
               type: "uint256",
             },
           ],
@@ -397,13 +578,109 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "getCurrentBlockTimestamp",
-          outputs: [
+          inputs: [
             {
               internalType: "uint256",
-              name: "timestamp",
+              name: "",
               type: "uint256",
+            },
+          ],
+          name: "markets",
+          outputs: [
+            {
+              internalType: "string",
+              name: "question",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "closeTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint16",
+              name: "feeBps",
+              type: "uint16",
+            },
+            {
+              internalType: "enum FHEPredictionMarket.Currency",
+              name: "currency",
+              type: "uint8",
+            },
+            {
+              internalType: "contract AggregatorV3Interface",
+              name: "priceFeed",
+              type: "address",
+            },
+            {
+              internalType: "int256",
+              name: "priceThreshold",
+              type: "int256",
+            },
+            {
+              internalType: "bool",
+              name: "outcomeReported",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "winningOutcome",
+              type: "bool",
+            },
+            {
+              internalType: "euint64",
+              name: "totalYes",
+              type: "uint256",
+            },
+            {
+              internalType: "euint64",
+              name: "totalNo",
+              type: "uint256",
+            },
+            {
+              internalType: "uint64",
+              name: "decryptedYes",
+              type: "uint64",
+            },
+            {
+              internalType: "uint64",
+              name: "decryptedNo",
+              type: "uint64",
+            },
+            {
+              internalType: "uint64",
+              name: "winningPool",
+              type: "uint64",
+            },
+            {
+              internalType: "uint64",
+              name: "losingPool",
+              type: "uint64",
+            },
+            {
+              internalType: "uint64",
+              name: "distributablePool",
+              type: "uint64",
+            },
+            {
+              internalType: "uint256",
+              name: "ethProtocolFee",
+              type: "uint256",
+            },
+            {
+              internalType: "euint64",
+              name: "fusdProtocolFee",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "decryptRequested",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "settled",
+              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -413,29 +690,44 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "addr",
+              name: "",
               type: "address",
             },
+            {
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              internalType: "euint64",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes",
+              name: "",
+              type: "bytes",
+            },
           ],
-          name: "getEthBalance",
+          name: "onConfidentialTransferReceived",
           outputs: [
             {
-              internalType: "uint256",
-              name: "balance",
+              internalType: "ebool",
+              name: "",
               type: "uint256",
             },
           ],
-          stateMutability: "view",
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
           inputs: [],
-          name: "getLastBlockHash",
+          name: "owner",
           outputs: [
             {
-              internalType: "bytes32",
-              name: "blockHash",
-              type: "bytes32",
+              internalType: "address",
+              name: "",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -444,107 +736,238 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "bool",
-              name: "requireSuccess",
-              type: "bool",
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
             },
             {
               components: [
                 {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
+                  internalType: "uint256",
+                  name: "ctHash",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint8",
+                  name: "securityZone",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint8",
+                  name: "utype",
+                  type: "uint8",
                 },
                 {
                   internalType: "bytes",
-                  name: "callData",
+                  name: "signature",
                   type: "bytes",
                 },
               ],
-              internalType: "struct Multicall3.Call[]",
-              name: "calls",
-              type: "tuple[]",
+              internalType: "struct InEuint64",
+              name: "encStake",
+              type: "tuple",
             },
-          ],
-          name: "tryAggregate",
-          outputs: [
             {
               components: [
                 {
-                  internalType: "bool",
-                  name: "success",
-                  type: "bool",
+                  internalType: "uint256",
+                  name: "ctHash",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint8",
+                  name: "securityZone",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint8",
+                  name: "utype",
+                  type: "uint8",
                 },
                 {
                   internalType: "bytes",
-                  name: "returnData",
+                  name: "signature",
                   type: "bytes",
                 },
               ],
-              internalType: "struct Multicall3.Result[]",
-              name: "returnData",
-              type: "tuple[]",
+              internalType: "struct InEbool",
+              name: "encOutcome",
+              type: "tuple",
+            },
+            {
+              internalType: "uint256",
+              name: "ethAmount",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "ctHash",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint8",
+                  name: "securityZone",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint8",
+                  name: "utype",
+                  type: "uint8",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct InEuint64",
+              name: "encFusdAmount",
+              type: "tuple",
             },
           ],
+          name: "placeBet",
+          outputs: [],
           stateMutability: "payable",
           type: "function",
         },
         {
           inputs: [
             {
-              internalType: "bool",
-              name: "requireSuccess",
-              type: "bool",
-            },
-            {
-              components: [
-                {
-                  internalType: "address",
-                  name: "target",
-                  type: "address",
-                },
-                {
-                  internalType: "bytes",
-                  name: "callData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Call[]",
-              name: "calls",
-              type: "tuple[]",
-            },
-          ],
-          name: "tryBlockAndAggregate",
-          outputs: [
-            {
               internalType: "uint256",
-              name: "blockNumber",
+              name: "marketId",
               type: "uint256",
             },
             {
-              internalType: "bytes32",
-              name: "blockHash",
-              type: "bytes32",
-            },
-            {
-              components: [
-                {
-                  internalType: "bool",
-                  name: "success",
-                  type: "bool",
-                },
-                {
-                  internalType: "bytes",
-                  name: "returnData",
-                  type: "bytes",
-                },
-              ],
-              internalType: "struct Multicall3.Result[]",
-              name: "returnData",
-              type: "tuple[]",
+              internalType: "uint256",
+              name: "betIndex",
+              type: "uint256",
             },
           ],
-          stateMutability: "payable",
+          name: "requestBetDecrypt",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "requestDecrypt",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "resolveWithChainlink",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "settleMarket",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "userFusdBalance",
+          outputs: [
+            {
+              internalType: "euint64",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "betIndex",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawETH",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawETHFees",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "betIndex",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawFUSD",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "marketId",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawFUSDFees",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
       ],
