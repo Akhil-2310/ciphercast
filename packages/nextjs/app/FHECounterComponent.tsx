@@ -57,8 +57,18 @@ const SetCounterRow = () => {
     const encryptInputAndSet = async () => {
       const encryptedInput = await onEncryptInput(FheTypes.Uint32, input);
 
+      if (!encryptedInput) return;
+
       // Send the encrypted value to the smart contract
-      writeContractAsync({ functionName: "set", args: [encryptedInput] });
+      writeContractAsync({
+        functionName: "set",
+        args: [
+          {
+            ...encryptedInput,
+            signature: encryptedInput.signature as `0x${string}`,
+          },
+        ],
+      });
     };
 
     encryptInputAndSet();
