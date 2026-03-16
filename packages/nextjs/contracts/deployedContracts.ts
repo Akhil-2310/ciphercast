@@ -222,7 +222,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     FHEPredictionMarket: {
-      address: "0xF7F52E384eBf3ea9B728Ce1645fb3f37e49F8286",
+      address: "0x4e9287807e65c7a1d3f8FB501f9E454242f5B60E",
       abi: [
         {
           inputs: [
@@ -676,6 +676,11 @@ const deployedContracts = {
               internalType: "bool",
               name: "decryptRequested",
               type: "bool",
+            },
+            {
+              internalType: "int256",
+              name: "resolvedPrice",
+              type: "int256",
             },
             {
               internalType: "bool",

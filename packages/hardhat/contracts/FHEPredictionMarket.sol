@@ -65,6 +65,7 @@ contract FHEPredictionMarket is ReentrancyGuard, IFHERC20Receiver {
         uint256 ethProtocolFee;
         euint64 fusdProtocolFee;
         bool decryptRequested;
+        int256 resolvedPrice;
         bool settled;
     }
 
@@ -233,6 +234,7 @@ contract FHEPredictionMarket is ReentrancyGuard, IFHERC20Receiver {
         (, int256 price, , , ) = m.priceFeed.latestRoundData();
         m.winningOutcome = price >= m.priceThreshold;
         m.outcomeReported = true;
+        m.resolvedPrice = price;
     }
 
     /// @notice Request decryption of pool totals - must be called before settleMarket
