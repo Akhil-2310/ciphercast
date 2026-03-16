@@ -88,7 +88,7 @@ export default function MarketsPage() {
         // Check if question exists
         const closeTime = Number(raw[1]);
         const outcomeReported = raw[6] as boolean;
-        const settled = raw[18] as boolean;
+        const settled = raw[19] as boolean;
 
         let status: MarketStatus = "open";
         if (settled || outcomeReported) {

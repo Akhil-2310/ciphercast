@@ -69,7 +69,7 @@ export default function MarketDetailPage() {
       await resolveMarket({
         functionName: "resolveWithChainlink",
         args: [BigInt(marketId)],
-      });
+      } as any);
     } catch (error) {
       console.error("Failed to resolve:", error);
     }

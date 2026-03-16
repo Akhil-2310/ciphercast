@@ -5,8 +5,8 @@ import Link from "next/link";
 import { cofhesdkClient, useCofheActivePermit } from "../useCofhe";
 import { useDecryptValue } from "../useDecrypt";
 import { FheTypes } from "@cofhe/sdk";
-import { formatUnits } from "viem";
-import { useAccount } from "wagmi";
+import { formatEther, formatUnits } from "viem";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
@@ -34,19 +34,50 @@ export default function PortfolioPage() {
   const [bets, setBets] = useState<UserBet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [decryptedStakes, setDecryptedStakes] = useState<Record<string, bigint | "pending" | "error">>({});
+  const [decryptedOutcomes, setDecryptedOutcomes] = useState<Record<string, boolean | "pending" | "error">>({});
   const activePermit = useCofheActivePermit();
+  const { data: ethBalance } = useBalance({ address });
 
-  // Read encrypted FUSD balance
+  // Read encrypted deposit balance (inside prediction market)
   const { data: encryptedBalance } = useScaffoldReadContract({
     contractName: "FHEPredictionMarket",
     functionName: "userFusdBalance",
     args: [address],
   } as any);
 
-  // Decrypt the balance using permit
+  // Decrypt the deposit balance using permit
   const { onDecrypt: onDecryptBalance, result: balanceResult } = useDecryptValue(
     FheTypes.Uint64,
     encryptedBalance as bigint | null | undefined,
+  );
+
+  // Read AUSD token address from the prediction market
+  const { data: ausdAddress } = useScaffoldReadContract({
+    contractName: "FHEPredictionMarket",
+    functionName: "fusd",
+  });
+
+  // Read encrypted AUSD wallet balance (from ERC20Confidential)
+  const { data: encryptedWalletBalance } = useReadContract({
+    address: ausdAddress as `0x${string}` | undefined,
+    abi: [
+      {
+        name: "confidentialBalanceOf",
+        type: "function",
+        stateMutability: "view",
+        inputs: [{ name: "account", type: "address" }],
+        outputs: [{ name: "", type: "uint256" }],
+      },
+    ] as const,
+    functionName: "confidentialBalanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!ausdAddress && !!address },
+  });
+
+  // Decrypt the wallet balance
+  const { onDecrypt: onDecryptWalletBalance, result: walletBalanceResult } = useDecryptValue(
+    FheTypes.Uint64,
+    encryptedWalletBalance as bigint | null | undefined,
   );
 
   // Read market counter to know how many markets exist
@@ -174,11 +205,11 @@ export default function PortfolioPage() {
 
       if (!marketData) continue;
 
-      // Market struct indices:
-      // 0: question, 3: currency, 6: outcomeReported, 18: settled
+      // Market struct indices (with resolvedPrice at 18):
+      // 0: question, 3: currency, 6: outcomeReported, 7: winningOutcome, 19: settled
       const question = marketData[0] as string;
       const currency = Number(marketData[3]) === 0 ? "ETH" : "FUSD";
-      const settled = marketData[18] as boolean;
+      const settled = marketData[19] as boolean;
 
       for (let betIndex = 0; betIndex < Math.min(betCount, 3); betIndex++) {
         const betKey = `${marketId}-${betIndex}`;
@@ -305,8 +336,27 @@ export default function PortfolioPage() {
     [decryptedStakes],
   );
 
+  const handleDecryptOutcome = useCallback(
+    async (bet: UserBet) => {
+      const betKey = `${bet.marketId}-${bet.betIndex}`;
+      if (decryptedOutcomes[betKey] === "pending") return;
+      setDecryptedOutcomes(prev => ({ ...prev, [betKey]: "pending" }));
+      try {
+        const result = await cofhesdkClient.decryptHandle(bet.encryptedOutcome, FheTypes.Bool).decrypt();
+        if (result.success) {
+          setDecryptedOutcomes(prev => ({ ...prev, [betKey]: result.data as boolean }));
+        } else {
+          setDecryptedOutcomes(prev => ({ ...prev, [betKey]: "error" }));
+        }
+      } catch {
+        setDecryptedOutcomes(prev => ({ ...prev, [betKey]: "error" }));
+      }
+    },
+    [decryptedOutcomes],
+  );
+
   const activeBets = bets.filter(b => !b.marketSettled);
-  const claimableBets = bets.filter(b => b.canClaim && !b.isWithdrawn);
+  const settledBets = bets.filter(b => b.marketSettled && !b.isWithdrawn);
   const completedBets = bets.filter(b => b.isWithdrawn);
 
   if (!isConnected) {
@@ -343,147 +393,222 @@ export default function PortfolioPage() {
           </div>
         ) : (
           <>
-            {/* FUSD Balance Card */}
-            <div className="bg-base-100 border border-base-300 rounded-xl p-6 mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-base-content/60 mb-1">AUSD Deposit Balance</div>
-                  <div className="text-3xl font-bold text-base-content">
-                    {balanceResult.state === "success" && balanceResult.value != null
-                      ? `${formatUnits(balanceResult.value as bigint, 6)} AUSD`
-                      : balanceResult.state === "pending"
-                        ? "Decrypting..."
-                        : balanceResult.state === "error"
-                          ? "Error"
-                          : "🔒 Encrypted"}
+            {/* Balance Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* ETH Balance */}
+              <div className="bg-base-100 border border-base-300 rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-base-content/60 mb-1">⟠ ETH Balance</div>
+                    <div className="text-2xl font-bold text-base-content">
+                      {ethBalance ? `${parseFloat(formatEther(ethBalance.value)).toFixed(4)} ETH` : "—"}
+                    </div>
                   </div>
-                  {balanceResult.state === "error" && (
-                    <div className="text-xs text-error mt-1">{balanceResult.error}</div>
-                  )}
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  {!activePermit && <div className="text-xs text-warning">Create a permit in CofhePortal first</div>}
+              </div>
+
+              {/* AUSD Wallet Balance */}
+              <div className="bg-base-100 border border-base-300 rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-base-content/60 mb-1">💰 AUSD Wallet Balance</div>
+                    <div className="text-2xl font-bold text-base-content">
+                      {walletBalanceResult.state === "success" && walletBalanceResult.value != null
+                        ? `${formatUnits(walletBalanceResult.value as bigint, 6)} AUSD`
+                        : walletBalanceResult.state === "pending"
+                          ? "Decrypting..."
+                          : walletBalanceResult.state === "error"
+                            ? "Error"
+                            : "🔒 Encrypted"}
+                    </div>
+                    {walletBalanceResult.state === "error" && (
+                      <div className="text-xs text-error mt-1">{walletBalanceResult.error}</div>
+                    )}
+                  </div>
+                  <button
+                    className={`btn btn-sm btn-outline ${walletBalanceResult.state === "pending" ? "btn-disabled" : ""}`}
+                    onClick={onDecryptWalletBalance}
+                    disabled={walletBalanceResult.state === "pending" || !activePermit}
+                  >
+                    {walletBalanceResult.state === "pending" && <span className="loading loading-spinner loading-xs" />}
+                    {walletBalanceResult.state === "success" ? "🔄" : "🔓"}
+                  </button>
+                </div>
+              </div>
+
+              {/* AUSD Deposit Balance */}
+              <div className="bg-base-100 border border-base-300 rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-base-content/60 mb-1">🏦 AUSD Deposited in Markets</div>
+                    <div className="text-2xl font-bold text-base-content">
+                      {balanceResult.state === "success" && balanceResult.value != null
+                        ? `${formatUnits(balanceResult.value as bigint, 6)} AUSD`
+                        : balanceResult.state === "pending"
+                          ? "Decrypting..."
+                          : balanceResult.state === "error"
+                            ? "Error"
+                            : "🔒 Encrypted"}
+                    </div>
+                    {balanceResult.state === "error" && (
+                      <div className="text-xs text-error mt-1">{balanceResult.error}</div>
+                    )}
+                  </div>
                   <button
                     className={`btn btn-sm btn-outline ${balanceResult.state === "pending" ? "btn-disabled" : ""}`}
                     onClick={onDecryptBalance}
                     disabled={balanceResult.state === "pending" || !activePermit}
                   >
                     {balanceResult.state === "pending" && <span className="loading loading-spinner loading-xs" />}
-                    {balanceResult.state === "success" ? "🔄 Refresh" : "🔓 Decrypt Balance"}
+                    {balanceResult.state === "success" ? "🔄" : "🔓"}
                   </button>
                 </div>
               </div>
             </div>
 
+            {!activePermit && (
+              <div className="text-sm text-warning mb-4 text-center">
+                ⚠️ Create a permit in CofhePortal (shield icon) to decrypt your encrypted balances
+              </div>
+            )}
+
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-base-100 border border-base-300 rounded-xl p-6">
                 <div className="text-sm text-base-content/60 mb-1">Active Bets</div>
                 <div className="text-3xl font-bold text-base-content">{activeBets.length}</div>
               </div>
               <div className="bg-base-100 border border-base-300 rounded-xl p-6">
-                <div className="text-sm text-base-content/60 mb-1">Ready to Claim</div>
-                <div className="text-3xl font-bold text-success">{claimableBets.length}</div>
+                <div className="text-sm text-base-content/60 mb-1">Settled</div>
+                <div className="text-3xl font-bold text-success">{settledBets.length}</div>
               </div>
               <div className="bg-base-100 border border-base-300 rounded-xl p-6">
                 <div className="text-sm text-base-content/60 mb-1">Completed</div>
                 <div className="text-3xl font-bold text-base-content">{completedBets.length}</div>
               </div>
+              <div className="bg-base-100 border border-base-300 rounded-xl p-6">
+                <div className="text-sm text-base-content/60 mb-1">ETH Staked</div>
+                <div className="text-3xl font-bold text-base-content">
+                  {formatEther(bets.filter(b => b.currency === "ETH").reduce((sum, b) => sum + b.ethEscrow, 0n))}
+                </div>
+              </div>
             </div>
 
-            {/* Claimable */}
-            {claimableBets.length > 0 && (
+            {/* Settled Bets — reveal outcome and claim */}
+            {settledBets.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                  Ready to Claim
+                  Settled Bets
                 </h2>
                 <div className="space-y-4">
-                  {claimableBets.map(bet => (
-                    <div
-                      key={`${bet.marketId}-${bet.betIndex}`}
-                      className="bg-base-100 border border-success/30 rounded-xl p-4 flex items-center justify-between"
-                    >
-                      <div>
-                        <Link
-                          href={`/markets/${bet.marketId}`}
-                          className="font-medium text-base-content hover:underline"
-                        >
-                          {bet.marketQuestion}
-                        </Link>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-base-content/60">
-                          <span className="badge badge-sm">{bet.currency}</span>
-                          {bet.currency === "ETH" ? (
-                            <>
+                  {settledBets.map(bet => {
+                    const betKey = `${bet.marketId}-${bet.betIndex}`;
+                    const outcomeVal = decryptedOutcomes[betKey];
+                    const isOutcomeDecrypted = typeof outcomeVal === "boolean";
+                    const userBetYes = outcomeVal === true;
+                    const userWon = isOutcomeDecrypted && outcomeVal === bet.winningOutcome;
+                    const stakeVal = decryptedStakes[betKey];
+
+                    return (
+                      <div
+                        key={betKey}
+                        className={`bg-base-100 border rounded-xl p-4 flex items-center justify-between ${
+                          isOutcomeDecrypted ? (userWon ? "border-success/30" : "border-error/30") : "border-base-300"
+                        }`}
+                      >
+                        <div>
+                          <Link
+                            href={`/markets/${bet.marketId}`}
+                            className="font-medium text-base-content hover:underline"
+                          >
+                            {bet.marketQuestion}
+                          </Link>
+                          <div className="flex items-center gap-3 mt-1 text-sm text-base-content/60">
+                            <span className="badge badge-sm">{bet.currency}</span>
+                            {/* Show bet side */}
+                            {isOutcomeDecrypted ? (
+                              <span className={`badge badge-sm ${userBetYes ? "badge-info" : "badge-warning"}`}>
+                                You bet: {userBetYes ? "YES" : "NO"}
+                              </span>
+                            ) : (
+                              <button
+                                className={`btn btn-xs btn-ghost ${outcomeVal === "pending" ? "btn-disabled" : ""}`}
+                                onClick={() => handleDecryptOutcome(bet)}
+                                disabled={outcomeVal === "pending" || !activePermit}
+                              >
+                                {outcomeVal === "pending"
+                                  ? "Revealing..."
+                                  : outcomeVal === "error"
+                                    ? "❌ Retry"
+                                    : "🔓 Reveal Bet"}
+                              </button>
+                            )}
+                            {/* Show stake amount */}
+                            {bet.currency === "ETH" ? (
                               <span>Stake: {formatUnits(bet.ethEscrow, 18)} ETH</span>
-                              {bet.winningPool && bet.distributablePool && bet.winningPool > 0n && (
+                            ) : stakeVal && typeof stakeVal === "bigint" ? (
+                              <span>Stake: {formatUnits(stakeVal, 6)} AUSD</span>
+                            ) : (
+                              <button
+                                className={`btn btn-xs btn-ghost ${stakeVal === "pending" ? "btn-disabled" : ""}`}
+                                onClick={() => handleDecryptStake(bet)}
+                                disabled={stakeVal === "pending" || !activePermit}
+                              >
+                                {stakeVal === "pending" ? "..." : "🔓 Stake"}
+                              </button>
+                            )}
+                            {/* Show potential payout for winners */}
+                            {isOutcomeDecrypted &&
+                              userWon &&
+                              bet.winningPool &&
+                              bet.distributablePool &&
+                              bet.winningPool > 0n && (
                                 <span className="text-success font-medium">
-                                  Potential:{" "}
-                                  {formatUnits(
-                                    bet.ethEscrow + (bet.ethEscrow * bet.distributablePool) / bet.winningPool,
-                                    18,
-                                  )}{" "}
-                                  ETH
+                                  {bet.currency === "ETH"
+                                    ? `Payout: ${formatUnits(bet.ethEscrow + (bet.ethEscrow * bet.distributablePool) / bet.winningPool, 18)} ETH`
+                                    : stakeVal && typeof stakeVal === "bigint"
+                                      ? `Payout: ${formatUnits(stakeVal + (stakeVal * bet.distributablePool) / bet.winningPool, 6)} AUSD`
+                                      : ""}
                                 </span>
+                              )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          {!isOutcomeDecrypted ? (
+                            <span className="badge badge-ghost">Reveal to check</span>
+                          ) : userWon ? (
+                            <>
+                              <span className="badge badge-success">🏆 Won!</span>
+                              {!bet.decryptRequested ? (
+                                <button
+                                  className={`btn btn-sm btn-warning ${isWithdrawing ? "btn-disabled" : ""}`}
+                                  onClick={() => handleRequestDecrypt(bet)}
+                                  disabled={isWithdrawing}
+                                >
+                                  {isRequestingDecrypt && <span className="loading loading-spinner loading-xs" />}
+                                  Request Decrypt
+                                </button>
+                              ) : (
+                                <button
+                                  className={`btn btn-sm btn-success ${isWithdrawing ? "btn-disabled" : ""}`}
+                                  onClick={() => handleWithdraw(bet)}
+                                  disabled={isWithdrawing}
+                                >
+                                  {(isWithdrawingETH || isWithdrawingFUSD) && (
+                                    <span className="loading loading-spinner loading-xs" />
+                                  )}
+                                  Claim Winnings
+                                </button>
                               )}
                             </>
                           ) : (
-                            (() => {
-                              const betKey = `${bet.marketId}-${bet.betIndex}`;
-                              const stakeVal = decryptedStakes[betKey];
-                              return stakeVal && typeof stakeVal === "bigint" ? (
-                                <>
-                                  <span>Stake: {formatUnits(stakeVal, 6)} AUSD</span>
-                                  {bet.winningPool && bet.distributablePool && bet.winningPool > 0n && (
-                                    <span className="text-success font-medium">
-                                      Potential:{" "}
-                                      {formatUnits(stakeVal + (stakeVal * bet.distributablePool) / bet.winningPool, 6)}{" "}
-                                      AUSD
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <button
-                                  className={`btn btn-xs btn-ghost ${stakeVal === "pending" ? "btn-disabled" : ""}`}
-                                  onClick={() => handleDecryptStake(bet)}
-                                  disabled={stakeVal === "pending" || !activePermit}
-                                >
-                                  {stakeVal === "pending"
-                                    ? "Decrypting..."
-                                    : stakeVal === "error"
-                                      ? "❌ Retry"
-                                      : "🔓 Decrypt Stake"}
-                                </button>
-                              );
-                            })()
+                            <span className="badge badge-error">Lost</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        {!bet.decryptRequested ? (
-                          <button
-                            className={`btn btn-warning ${isWithdrawing ? "btn-disabled" : ""}`}
-                            onClick={() => handleRequestDecrypt(bet)}
-                            disabled={isWithdrawing}
-                          >
-                            {isRequestingDecrypt && <span className="loading loading-spinner loading-sm" />}
-                            Step 1: Request Decrypt
-                          </button>
-                        ) : (
-                          <button
-                            className={`btn btn-success ${isWithdrawing ? "btn-disabled" : ""}`}
-                            onClick={() => handleWithdraw(bet)}
-                            disabled={isWithdrawing}
-                          >
-                            {(isWithdrawingETH || isWithdrawingFUSD) && (
-                              <span className="loading loading-spinner loading-sm" />
-                            )}
-                            Step 2: Claim Winnings
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
